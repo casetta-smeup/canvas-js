@@ -18,222 +18,10 @@ const DEBUG = false;
 const DEFAULT_COLOR = new Color(0, 0, 0);
 
 function onload() {
-    draw('canvas00', 'R255G128B000;20,58\\HEIGHT;60');
-    draw('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20');
-    draw('canvas02', 'R000G255B128;33,3\\ARW;50,00\\R255G255B051;66,5\\R220G000B000;100,0\\GRID;3');
-}
 
-function draw(canvasID, value) {
-    var canvas = document.getElementById(canvasID);
-
-    if (canvas.getContext) {
-        var ctx = canvas.getContext('2d');
-
-        drawGraphicCell(ctx, value);
-    }
-}
-
-function drawGraphicCell(ctx, value) {
-    var vGraphicElementDefinitionArr = value.split(GRAPHIC_ELEMENT_SPLITTER);
-
-    for (var i = 0; i < vGraphicElementDefinitionArr.length; i++) {
-        var vGraphicElementArray = [];
-
-        var graphicElem = vGraphicElementDefinitionArr[i];
-
-        var vShapeMarker = "SHAPE;BAR";
-        var vBGColorMarker = DEFAULT_BGD_COLOR;
-        var vHeightPctMarker = "HEIGHT;100";
-
-        var vMarkersArray = graphicElem.split(GRAPHIC_ELEMENT_MARKER_SPLITTER);
-
-        var shapesArray = [];
-        var vSeparatorsList = [];
-
-        for (var j = 0; j < vMarkersArray.length; j++) {
-            var vString = vMarkersArray[j];
-
-            if (isShapeMarker(vString)) {
-                vShapeMarker = vString;
-            } else if (isBgColorMarker(vString)) {
-                vBGColorMarker = vString;
-            } else if (isHeightMarker(vString)) {
-                vHeightPctMarker = vString;
-            } else if (isDecoratorMarker(vString)) {
-                vSeparatorsList.push(vString);
-            } else {
-                shapesArray.push(vString);
-            }
-        }
-
-        shapesArray.forEach(shape => {
-            var elem = new GraphicElement([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
-            vGraphicElementArray.push(elem);
-        })
-
-        // se e' il primo giro, imposto lo sfondo
-        if (i == 0 && vBGColorMarker != DEFAULT_BGD_COLOR) {
-            // TODO
-        }
-
-        var startX = 0;
-
-        vGraphicElementArray.forEach(elem => {
-            switch (elem.getShape()) {
-                case 'circle':
-                    break;
-
-                case 'tril':
-                    break;
-
-                case 'trir':
-                    break;
-
-                default:
-                    // bar
-                    startX = getNewStarXFromBar(ctx, startX, elem);
-                    break;
-            }
-        })
-    }
-
-    vSeparatorsList.forEach(sep => {
-        if (DEBUG) {
-            console.log(sep);
-        }
-
-        if (sep.startsWith("SEP") || sep.startsWith("DIV")) {
-            drawSeparator(ctx, sep);
-        } else if (sep.startsWith("ARW")) {
-            drawArrow(ctx, sep);
-        } else if (sep.startsWith("GRID")) {
-            drawGrid(ctx, sep);
-        }
-    });
-}
-
-function drawSeparator(ctx, sep) {
-
-    var vSeparatorPart = sep.substring("SEP;".length).split(";");
-    var vColor = "R000G000B000";
-    var vThickness = 2;
-    var vPositionPart = vSeparatorPart[0];
-    if (vSeparatorPart.length > 1) {
-        vColor = vSeparatorPart[1];
-    }
-    if (vSeparatorPart.length > 2) {
-        vThickness = parseInt(vSeparatorPart[2]);
-    }
-
-    // I dont know, but it's a fucking copia incolla
-    if (vPositionPart.indexOf(",") > -1) {
-        vPositionPart = vPositionPart.replace(',', '.');
-    }
-
-    var x = getDim(ctx.canvas.width, parseFloat(vPositionPart));
-
-    drawRect(ctx, x, 0, vThickness, ctx.canvas.height, getColorFromString(vColor));
-}
-
-function drawGrid(ctx, sep) {
-    var vPart = sep.substring("GRID;".length);
-    if (vPart.indexOf(",") > -1) {
-        vPart = vPart.replace(',', '.');
-    }
-    var vTickNum = parseInt(vPart);
-    var vTickDist = ctx.canvas.width / vTickNum;
-
-    var tickH = ctx.canvas.height / 5;
-    var y = ctx.canvas.height - tickH;
-
-    var tickW = 1;
-    for (var i = vTickDist; i < ctx.canvas.width; i = i + vTickDist) {
-        drawRect(ctx, i, y, tickW, tickH, DEFAULT_COLOR);
-    }
-}
-
-function drawArrow(ctx, sep) {
-    var vPart = sep.substring("ARW;".length);
-    if (vPart.indexOf(',') > -1) {
-        vPart = vPart.replace(',', '.');
-    }
-
-    ctx.fillStyle = DEFAULT_COLOR.toString();
-
-    var startX = getDim(ctx.canvas.width, parseFloat(vPart));
-    var height = ctx.canvas.height;
-    var arrSpan = parseInt(height / 3);
-    var arrSpanHalf = arrSpan / 2;
-
-    ctx.beginPath();
-    ctx.moveTo(startX, 0);
-    ctx.lineTo(startX - arrSpan, height / 2);
-    ctx.lineTo(startX - arrSpanHalf, height / 2);
-    ctx.lineTo(startX - arrSpanHalf, height);
-    ctx.lineTo(startX + arrSpanHalf, height);
-    ctx.lineTo(startX + arrSpanHalf, height / 2);
-    ctx.lineTo(startX + arrSpan, height / 2);
-    ctx.fill();
-}
-
-function isShapeMarker(value) {
-    if (value) {
-        return value.toUpperCase().startsWith("SHAPE;")
-    }
-    return false;
-}
-
-function isBgColorMarker(value) {
-    if (value) {
-        return value.toUpperCase().startsWith("BCOLOR;")
-    }
-    return false;
-}
-
-function isHeightMarker(value) {
-    if (value) {
-        return value.toUpperCase().startsWith("HEIGHT;")
-    }
-    return false;
-}
-
-function isDecoratorMarker(value) {
-    if (value) {
-        return value.toUpperCase().startsWith("SEP;")
-            || value.toUpperCase().startsWith("DIV;")
-            || value.toUpperCase().startsWith("ARW;")
-            || value.toUpperCase().startsWith("GRID;");
-    }
-    return false;
-}
-
-function getDim(dimPixel, dimPerc) {
-    return parseInt((dimPixel / 100) * dimPerc);
-}
-
-function getNewStarXFromBar(ctx, startX, elem) {
-    var elemWidth = getDim(ctx.canvas.width, elem.getWidth());
-    var elemHeight = getDim(ctx.canvas.height, elem.getHeight());
-    var y = ctx.canvas.height - elemHeight;
-
-    if (!elem.isTrasparent()) {
-        drawRect(ctx, startX, y, elemWidth, elemHeight, elem.getColor());
-    }
-
-    return elemWidth;
-}
-
-function drawRect(ctx, x, y, width, height, c) {
-    if (DEBUG) {
-        console.log('x', x);
-        console.log('y', y);
-        console.log('w', width);
-        console.log('h', height);
-        console.log('c', c);
-    }
-
-    ctx.fillStyle = c.toString();
-    ctx.fillRect(x, y, width, height);
+    new GraphicCell('canvas00', 'R255G128B000;20,58\\HEIGHT;60').draw();
+    new GraphicCell('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20').draw();
+    new GraphicCell('canvas02', 'R000G255B128;33,3\\ARW;50,00\\R255G255B051;66,5\\R220G000B000;100,0\\GRID;3').draw();
 }
 
 class GraphicElement {
@@ -367,4 +155,225 @@ function getColorFromString(rgb) {
     }
 
     return null;
+}
+
+class GraphicCell {
+
+    constructor(canvasID, value) {
+        this.canvasID = canvasID;
+        this.value = value;
+    }
+
+    draw() {
+        var canvas = document.getElementById(this.canvasID);
+    
+        if (canvas.getContext) {
+            var ctx = canvas.getContext('2d');
+    
+            this.drawGraphicCell(ctx, this.value);
+        }
+    }
+    
+    drawGraphicCell(ctx, value) {
+        var vGraphicElementDefinitionArr = value.split(GRAPHIC_ELEMENT_SPLITTER);
+    
+        for (var i = 0; i < vGraphicElementDefinitionArr.length; i++) {
+            var vGraphicElementArray = [];
+    
+            var graphicElem = vGraphicElementDefinitionArr[i];
+    
+            var vShapeMarker = "SHAPE;BAR";
+            var vBGColorMarker = DEFAULT_BGD_COLOR;
+            var vHeightPctMarker = "HEIGHT;100";
+    
+            var vMarkersArray = graphicElem.split(GRAPHIC_ELEMENT_MARKER_SPLITTER);
+    
+            var shapesArray = [];
+            var vSeparatorsList = [];
+    
+            for (var j = 0; j < vMarkersArray.length; j++) {
+                var vString = vMarkersArray[j];
+    
+                if (this.isShapeMarker(vString)) {
+                    vShapeMarker = vString;
+                } else if (this.isBgColorMarker(vString)) {
+                    vBGColorMarker = vString;
+                } else if (this.isHeightMarker(vString)) {
+                    vHeightPctMarker = vString;
+                } else if (this.isDecoratorMarker(vString)) {
+                    vSeparatorsList.push(vString);
+                } else {
+                    shapesArray.push(vString);
+                }
+            }
+    
+            shapesArray.forEach(shape => {
+                var elem = new GraphicElement([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
+                vGraphicElementArray.push(elem);
+            })
+    
+            // se e' il primo giro, imposto lo sfondo
+            if (i == 0 && vBGColorMarker != DEFAULT_BGD_COLOR) {
+                // TODO
+            }
+    
+            var startX = 0;
+    
+            vGraphicElementArray.forEach(elem => {
+                switch (elem.getShape()) {
+                    case 'circle':
+                        break;
+    
+                    case 'tril':
+                        break;
+    
+                    case 'trir':
+                        break;
+    
+                    default:
+                        // bar
+                        startX = this.getNewStarXFromBar(ctx, startX, elem);
+                        break;
+                }
+            })
+        }
+    
+        vSeparatorsList.forEach(sep => {
+            if (DEBUG) {
+                console.log(sep);
+            }
+    
+            if (sep.startsWith("SEP") || sep.startsWith("DIV")) {
+                this.drawSeparator(ctx, sep);
+            } else if (sep.startsWith("ARW")) {
+                this.drawArrow(ctx, sep);
+            } else if (sep.startsWith("GRID")) {
+                this.drawGrid(ctx, sep);
+            }
+        });
+    }
+    
+    drawSeparator(ctx, sep) {
+    
+        var vSeparatorPart = sep.substring("SEP;".length).split(";");
+        var vColor = "R000G000B000";
+        var vThickness = 2;
+        var vPositionPart = vSeparatorPart[0];
+        if (vSeparatorPart.length > 1) {
+            vColor = vSeparatorPart[1];
+        }
+        if (vSeparatorPart.length > 2) {
+            vThickness = parseInt(vSeparatorPart[2]);
+        }
+    
+        // I dont know, but it's a fucking copia incolla
+        if (vPositionPart.indexOf(",") > -1) {
+            vPositionPart = vPositionPart.replace(',', '.');
+        }
+    
+        var x = this.getDim(ctx.canvas.width, parseFloat(vPositionPart));
+    
+        this.drawRect(ctx, x, 0, vThickness, ctx.canvas.height, getColorFromString(vColor));
+    }
+    
+    drawGrid(ctx, sep) {
+        var vPart = sep.substring("GRID;".length);
+        if (vPart.indexOf(",") > -1) {
+            vPart = vPart.replace(',', '.');
+        }
+        var vTickNum = parseInt(vPart);
+        var vTickDist = ctx.canvas.width / vTickNum;
+    
+        var tickH = ctx.canvas.height / 5;
+        var y = ctx.canvas.height - tickH;
+    
+        var tickW = 1;
+        for (var i = vTickDist; i < ctx.canvas.width; i = i + vTickDist) {
+            this.drawRect(ctx, i, y, tickW, tickH, DEFAULT_COLOR);
+        }
+    }
+    
+    drawArrow(ctx, sep) {
+        var vPart = sep.substring("ARW;".length);
+        if (vPart.indexOf(',') > -1) {
+            vPart = vPart.replace(',', '.');
+        }
+    
+        ctx.fillStyle = DEFAULT_COLOR.toString();
+    
+        var startX = this.getDim(ctx.canvas.width, parseFloat(vPart));
+        var height = ctx.canvas.height;
+        var arrSpan = parseInt(height / 3);
+        var arrSpanHalf = arrSpan / 2;
+    
+        ctx.beginPath();
+        ctx.moveTo(startX, 0);
+        ctx.lineTo(startX - arrSpan, height / 2);
+        ctx.lineTo(startX - arrSpanHalf, height / 2);
+        ctx.lineTo(startX - arrSpanHalf, height);
+        ctx.lineTo(startX + arrSpanHalf, height);
+        ctx.lineTo(startX + arrSpanHalf, height / 2);
+        ctx.lineTo(startX + arrSpan, height / 2);
+        ctx.fill();
+    }
+    
+    isShapeMarker(value) {
+        if (value) {
+            return value.toUpperCase().startsWith("SHAPE;")
+        }
+        return false;
+    }
+    
+    isBgColorMarker(value) {
+        if (value) {
+            return value.toUpperCase().startsWith("BCOLOR;")
+        }
+        return false;
+    }
+    
+    isHeightMarker(value) {
+        if (value) {
+            return value.toUpperCase().startsWith("HEIGHT;")
+        }
+        return false;
+    }
+    
+    isDecoratorMarker(value) {
+        if (value) {
+            return value.toUpperCase().startsWith("SEP;")
+                || value.toUpperCase().startsWith("DIV;")
+                || value.toUpperCase().startsWith("ARW;")
+                || value.toUpperCase().startsWith("GRID;");
+        }
+        return false;
+    }
+    
+    getDim(dimPixel, dimPerc) {
+        return parseInt((dimPixel / 100) * dimPerc);
+    }
+    
+    getNewStarXFromBar(ctx, startX, elem) {
+        var elemWidth = this.getDim(ctx.canvas.width, elem.getWidth());
+        var elemHeight = this.getDim(ctx.canvas.height, elem.getHeight());
+        var y = ctx.canvas.height - elemHeight;
+    
+        if (!elem.isTrasparent()) {
+            this.drawRect(ctx, startX, y, elemWidth, elemHeight, elem.getColor());
+        }
+    
+        return elemWidth;
+    }
+    
+    drawRect(ctx, x, y, width, height, c) {
+        if (DEBUG) {
+            console.log('x', x);
+            console.log('y', y);
+            console.log('w', width);
+            console.log('h', height);
+            console.log('c', c);
+        }
+    
+        ctx.fillStyle = c.toString();
+        ctx.fillRect(x, y, width, height);
+    }
 }
