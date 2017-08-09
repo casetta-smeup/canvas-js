@@ -91,7 +91,7 @@ function drawGraphicCell(ctx, value) {
         } else if (sep.startsWith("ARW")) {
             // drawArrow(sep, width);
         } else if (sep.startsWith("GRID")) {
-            // drawGrid(sep, shapes, width);
+            drawGrid(ctx, sep);
         }
     });
 }
@@ -117,6 +117,23 @@ function drawSeparator(ctx, sep) {
     var x = getDim(ctx.canvas.width, parseFloat(vPositionPart));
 
     drawRect(ctx, x, 0, vThickness, ctx.canvas.height, getColorFromString(vColor));
+}
+
+function drawGrid(ctx, sep) {
+    var vPart = sep.substring("GRID;".length);
+    if (vPart.indexOf(",") > -1) {
+        vPart = vPart.replace(',', '.');
+    }
+    var vTickNum = parseInt(vPart);
+    var vTickDist = ctx.canvas.width / vTickNum;
+
+    var tickH = ctx.canvas.height / 5;
+    var y = ctx.canvas.height - tickH;
+
+    var tickW = 1;
+    for (var i = vTickDist; i < ctx.canvas.width; i = i + vTickDist) {
+        drawRect(ctx, i, y, tickW, tickH, new Color(0, 0, 0));
+    }
 }
 
 function isShapeMarker(value) {
