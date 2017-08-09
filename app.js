@@ -1,15 +1,31 @@
+class Color {
+
+    constructor(r, g, b) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+    }
+
+    toString() {
+        return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
+    }
+}
+
 const GRAPHIC_ELEMENT_MARKER_SPLITTER = "\\";
 const GRAPHIC_ELEMENT_SPLITTER = "\\AND\\"
 const DEFAULT_BGD_COLOR = "BCOLOR;R255G000B000";
-const DEBUG = true;
+const DEBUG = false;
+const DEFAULT_COLOR = new Color(0, 0, 0);
 
 function onload() {
     draw('canvas00', 'R255G128B000;20,58\\HEIGHT;60');
     draw('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20');
+    draw('canvas02', 'R000G255B128;33,3\\ARW;50,00\\R255G255B051;66,5\\R220G000B000;100,0\\GRID;3');
 }
 
 function draw(canvasID, value) {
     var canvas = document.getElementById(canvasID);
+
     if (canvas.getContext) {
         var ctx = canvas.getContext('2d');
 
@@ -89,7 +105,7 @@ function drawGraphicCell(ctx, value) {
         if (sep.startsWith("SEP") || sep.startsWith("DIV")) {
             drawSeparator(ctx, sep);
         } else if (sep.startsWith("ARW")) {
-            // drawArrow(sep, width);
+            drawArrow(ctx, sep);
         } else if (sep.startsWith("GRID")) {
             drawGrid(ctx, sep);
         }
@@ -132,8 +148,32 @@ function drawGrid(ctx, sep) {
 
     var tickW = 1;
     for (var i = vTickDist; i < ctx.canvas.width; i = i + vTickDist) {
-        drawRect(ctx, i, y, tickW, tickH, new Color(0, 0, 0));
+        drawRect(ctx, i, y, tickW, tickH, DEFAULT_COLOR);
     }
+}
+
+function drawArrow(ctx, sep) {
+    var vPart = sep.substring("ARW;".length);
+    if (vPart.indexOf(',') > -1) {
+        vPart = vPart.replace(',', '.');
+    }
+
+    ctx.fillStyle = DEFAULT_COLOR.toString();
+
+    var startX = getDim(ctx.canvas.width, parseFloat(vPart));
+    var height = ctx.canvas.height;
+    var arrSpan = parseInt(height / 3);
+    var arrSpanHalf = arrSpan / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(startX, 0);
+    ctx.lineTo(startX - arrSpan, height / 2);
+    ctx.lineTo(startX - arrSpanHalf, height / 2);
+    ctx.lineTo(startX - arrSpanHalf, height);
+    ctx.lineTo(startX + arrSpanHalf, height);
+    ctx.lineTo(startX + arrSpanHalf, height / 2);
+    ctx.lineTo(startX + arrSpan, height / 2);
+    ctx.fill();
 }
 
 function isShapeMarker(value) {
@@ -301,19 +341,6 @@ class GraphicElement {
 
     getColor() {
         return this.color;
-    }
-}
-
-class Color {
-
-    constructor(r, g, b) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-    }
-
-    toString() {
-        return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
     }
 }
 
