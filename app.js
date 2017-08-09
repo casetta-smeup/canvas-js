@@ -5,7 +5,7 @@ const DEBUG = true;
 
 function onload() {
     draw('canvas00', 'R255G128B000;20,58\\HEIGHT;60');
-    draw('canvas01', 'R255G000B000;12,4\\SEP;25,00\\R255G255B000;74,00\\GRID;20');
+    draw('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20');
 }
 
 function draw(canvasID, value) {
@@ -80,6 +80,43 @@ function drawGraphicCell(ctx, value) {
             }
         })
     }
+
+    vSeparatorsList.forEach(sep => {
+        if (DEBUG) {
+            console.log(sep);
+        }
+
+        if (sep.startsWith("SEP") || sep.startsWith("DIV")) {
+            drawSeparator(ctx, sep);
+        } else if (sep.startsWith("ARW")) {
+            // drawArrow(sep, width);
+        } else if (sep.startsWith("GRID")) {
+            // drawGrid(sep, shapes, width);
+        }
+    });
+}
+
+function drawSeparator(ctx, sep) {
+
+    var vSeparatorPart = sep.substring("SEP;".length).split(";");
+    var vColor = "R000G000B000";
+    var vThickness = 2;
+    var vPositionPart = vSeparatorPart[0];
+    if (vSeparatorPart.length > 1) {
+        vColor = vSeparatorPart[1];
+    }
+    if (vSeparatorPart.length > 2) {
+        vThickness = parseInt(vSeparatorPart[2]);
+    }
+
+    // I dont know, but it's a fucking copia incolla
+    if (vPositionPart.indexOf(",") > -1) {
+        vPositionPart = vPositionPart.replace(',', '.');
+    }
+
+    var x = getDim(ctx.canvas.width, parseFloat(vPositionPart));
+
+    drawRect(ctx, x, 0, vThickness, ctx.canvas.height, getColorFromString(vColor));
 }
 
 function isShapeMarker(value) {
@@ -171,28 +208,7 @@ class GraphicElement {
 
     initColor(rgbString) {
         if (rgbString.length > 11 && this.isValidColor(rgbString)) {
-            var rgb = rgbString.substring(0, 12);
-
-            var rIndex = rgb.indexOf('R');
-            var gIndex = rgb.indexOf('G');
-            var bIndex = rgb.indexOf('B');
-
-            if (rIndex < 0
-                || gIndex < 0
-                || bIndex < 0) {
-
-                return;
-            }
-
-            var r = rgb.substring(rIndex + 1, rIndex + 4);
-            var g = rgb.substring(gIndex + 1, gIndex + 4);
-            var b = rgb.substring(bIndex + 1, bIndex + 4);
-
-            try {
-                this.color = new Color(parseInt(r), parseInt(g), parseInt(b));
-            } catch (e) {
-                console.error(e);
-            }
+            this.color = getColorFromString(rgbString.substring(0, 12));
 
             try {
                 this.width = parseFloat(rgbString.substring(13).replace(',', '.'));
@@ -282,4 +298,29 @@ class Color {
     toString() {
         return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
     }
+}
+
+function getColorFromString(rgb) {
+    var rIndex = rgb.indexOf('R');
+    var gIndex = rgb.indexOf('G');
+    var bIndex = rgb.indexOf('B');
+
+    if (rIndex < 0
+        || gIndex < 0
+        || bIndex < 0) {
+
+        return;
+    }
+
+    var r = rgb.substring(rIndex + 1, rIndex + 4);
+    var g = rgb.substring(gIndex + 1, gIndex + 4);
+    var b = rgb.substring(bIndex + 1, bIndex + 4);
+
+    try {
+        return new Color(parseInt(r), parseInt(g), parseInt(b));
+    } catch (e) {
+        console.error(e);
+    }
+
+    return null;
 }
