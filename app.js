@@ -1,9 +1,7 @@
-import { GraphicElement } from './graphic-element';
-
 const values = ['R255G128B000;20,58\\HEIGHT;60'];
 const GRAPHIC_ELEMENT_MARKER_SPLITTER = "\\";
 const GRAPHIC_ELEMENT_SPLITTER = "\\AND\\"
-const DEFAULT_BGD_COLOR = "BCOLOR;R255G255B255";
+const DEFAULT_BGD_COLOR = "BCOLOR;R255G000B000";
 
 function draw() {
     var canvas = document.getElementById('canvas');
@@ -20,7 +18,7 @@ function drawGraphicCell(ctx, value) {
     var vGraphicElementDefinitionArr = value.split(GRAPHIC_ELEMENT_SPLITTER);
 
     for (var i = 0; i < vGraphicElementDefinitionArr.length; i++) {
-        let vGraphicElementArray = [];
+        var vGraphicElementArray = [];
 
         var graphicElem = vGraphicElementDefinitionArr[i];
 
@@ -50,8 +48,7 @@ function drawGraphicCell(ctx, value) {
         }
 
         shapesArray.forEach(shape => {
-            console.log(shape);
-            var elem = new GraphicElement({ shape, vShapeMarker, vBGColorMarker, vHeightPctMarker });
+            var elem = new GraphicElement([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
             vGraphicElementArray.push(elem);
         })
 
@@ -60,8 +57,24 @@ function drawGraphicCell(ctx, value) {
             // TODO
         }
 
+        var startX = 0;
+
         vGraphicElementArray.forEach(elem => {
-            console.log(elem);
+            switch (elem.getShape()) {
+                case 'circle':
+                    break;
+
+                case 'tril':
+                    break;
+
+                case 'trir':
+                    break;
+
+                default:
+                    // bar
+                    startX = getNewStarXFromBar(ctx, startX, elem);
+                    break;
+            }
         })
     }
 }
@@ -97,27 +110,78 @@ function isDecoratorMarker(value) {
     return false;
 }
 
-class GraphicElement {
+function getDim(dimPixel, dimPerc) {
+    return parseInt((dimPixel / 100) * dimPerc);
+}
 
-    height = 100.0;
-    width = 100.0;
-    shape;
-    color = new Color(0, 0, 0);
+function getNewStarXFromBar(ctx, startX, elem) {
+    var elemWidth = getDim(ctx.canvas.width, elem.getWidth());
+    var elemHeight = getDim(ctx.canvas.height, elem.getHeight());
+    var y = ctx.canvas.height - elemHeight;
 
-    constructor(options) {
-        this.init(options);
+    if (!elem.isTrasparent()) {
+        drawRect(ctx, startX, y, elemWidth, elemHeight, elem.getColor());
     }
 
-    init(options) {
-        this.initHeight(options.vHeightPctMarker);
-        this.initShape(options.vShapeMarker);
-        this.initColor(options.vBGColorMarker);
+    return elemWidth;
+}
+
+function drawRect(ctx, x, y, width, height, c) {
+    ctx.fillStyle = c.toString();
+    ctx.fillRect(x, y, width, height);
+}
+
+class GraphicElement {
+
+    constructor(markers) {
+        this.width = 100.0;
+        this.height = 100.0;
+        this.color = null;
+        this.shape = 'bar';
+
+        this.init(markers);
+    }
+
+    init(markers) {
+        for (var i = 0; i < markers.length; i++) {
+            var marker = markers[i];
+
+            if (marker.toUpperCase().startsWith('HEIGHT;')) {
+                this.initHeight(marker);
+            } else if (marker.toUpperCase().startsWith('SHAPE;')) {
+                this.initShape(marker);
+            } else if (marker.toUpperCase().startsWith('BCOLOR;')) {
+                // TODO ?
+            } else {
+                this.initColor(marker);
+            }
+        }
     }
 
     initColor(rgbString) {
         if (rgbString.length > 11 && this.isValidColor(rgbString)) {
-            // TODO
-            this.color = new Color(255, 255, 255);
+            rgbString = rgbString.substring(0, 12);
+
+            var rIndex = rgbString.indexOf('R');
+            var gIndex = rgbString.indexOf('G');
+            var bIndex = rgbString.indexOf('B');
+
+            if (rIndex < 0
+                || gIndex < 0
+                || bIndex < 0) {
+
+                return;
+            }
+
+            var r = rgbString.substring(rIndex + 1, rIndex + 4);
+            var g = rgbString.substring(gIndex + 1, gIndex + 4);
+            var b = rgbString.substring(bIndex + 1, bIndex + 4);
+
+            try {
+                this.color = new Color(parseInt(r), parseInt(g), parseInt(b));
+            } catch (e) {
+                console.error(e);
+            }
         } else if (rgbString.toUpperCase() == '*NONE') {
             try {
                 this.width = parseFloat(rgbString.substring(6).replace(',', '.'));
@@ -127,9 +191,14 @@ class GraphicElement {
         }
     }
 
+    isTrasparent() {
+        return this.color == null;
+    }
+
     initHeight(height) {
         if (height) {
-            let toBeParsed = height.substring("HEIGHT;".length).replace(',', '.');
+            var toBeParsed = height.substring("HEIGHT;".length).replace(',', '.');
+            console.log(toBeParsed);
 
             this.height = parseFloat(toBeParsed);
         }
@@ -137,8 +206,8 @@ class GraphicElement {
 
     initShape(shape) {
         shape = shape.substring("SHAPE;".length);
-        let vLastSemicolonIndex = shape.indexOf(";");
-        let vShapeTypeString = shape;
+        var vLastSemicolonIndex = shape.indexOf(";");
+        var vShapeTypeString = shape;
         if (vLastSemicolonIndex > -1) {
             vShapeTypeString = shape.substring(0, vLastSemicolonIndex);
 
@@ -151,15 +220,15 @@ class GraphicElement {
 
         switch (vShapeTypeString.toLowerCase()) {
             case "circle":
-                this.shape = "";
+                this.shape = "circle";
                 break;
 
             case "tril":
-                this.shape = "";
+                this.shape = "tril";
                 break;
 
             case "trir":
-                this.shape = "";
+                this.shape = "trir";
                 break;
         }
     }
@@ -188,25 +257,13 @@ class GraphicElement {
 
 class Color {
 
-    r = 0;
-    g = 0;
-    b = 0;
-
     constructor(r, g, b) {
         this.r = r;
         this.g = g;
         this.b = b;
     }
 
-    get red() {
-        return this.r;
-    }
-
-    get green() {
-        return this.g;
-    }
-
-    get blue() {
-        return this.b;
+    toString() {
+        return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
     }
 }
