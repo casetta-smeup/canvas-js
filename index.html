@@ -4,10 +4,29 @@
 <head>
     <meta charset="utf-8" />
     <script type="text/javascript" src="app.js"></script>
+
+    <style>
+        table {
+            width: 100%;
+        }
+    </style>
 </head>
 
-<body onload="draw();">
-    <canvas id="canvas" width="500" height="30"></canvas>
+<body onload="onload()">
+    <table>
+        <tr>
+            <td>R255G128B000;20,58\\HEIGHT;60</td>
+            <td>
+                <canvas id="canvas00" width="500" height="30"></canvas>
+            </td>
+        </tr>
+        <tr>
+            <td>R255G000B000;12,4\\SEP;25,00\\R255G255B000;74,00\\GRID;20</td>
+            <td>
+                <canvas id="canvas01" width="500" height="30"></canvas>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>

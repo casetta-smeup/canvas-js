@@ -1,16 +1,19 @@
-const values = ['R255G128B000;20,58\\HEIGHT;60'];
 const GRAPHIC_ELEMENT_MARKER_SPLITTER = "\\";
 const GRAPHIC_ELEMENT_SPLITTER = "\\AND\\"
 const DEFAULT_BGD_COLOR = "BCOLOR;R255G000B000";
+const DEBUG = true;
 
-function draw() {
-    var canvas = document.getElementById('canvas');
+function onload() {
+    draw('canvas00', 'R255G128B000;20,58\\HEIGHT;60');
+    draw('canvas01', 'R255G000B000;12,4\\SEP;25,00\\R255G255B000;74,00\\GRID;20');
+}
+
+function draw(canvasID, value) {
+    var canvas = document.getElementById(canvasID);
     if (canvas.getContext) {
         var ctx = canvas.getContext('2d');
 
-        for (var i = 0; i < values.length; i++) {
-            drawGraphicCell(ctx, values[i]);
-        }
+        drawGraphicCell(ctx, value);
     }
 }
 
@@ -127,6 +130,14 @@ function getNewStarXFromBar(ctx, startX, elem) {
 }
 
 function drawRect(ctx, x, y, width, height, c) {
+    if (DEBUG) {
+        console.log('x', x);
+        console.log('y', y);
+        console.log('w', width);
+        console.log('h', height);
+        console.log('c', c);
+    }
+
     ctx.fillStyle = c.toString();
     ctx.fillRect(x, y, width, height);
 }
@@ -160,11 +171,11 @@ class GraphicElement {
 
     initColor(rgbString) {
         if (rgbString.length > 11 && this.isValidColor(rgbString)) {
-            rgbString = rgbString.substring(0, 12);
+            var rgb = rgbString.substring(0, 12);
 
-            var rIndex = rgbString.indexOf('R');
-            var gIndex = rgbString.indexOf('G');
-            var bIndex = rgbString.indexOf('B');
+            var rIndex = rgb.indexOf('R');
+            var gIndex = rgb.indexOf('G');
+            var bIndex = rgb.indexOf('B');
 
             if (rIndex < 0
                 || gIndex < 0
@@ -173,12 +184,18 @@ class GraphicElement {
                 return;
             }
 
-            var r = rgbString.substring(rIndex + 1, rIndex + 4);
-            var g = rgbString.substring(gIndex + 1, gIndex + 4);
-            var b = rgbString.substring(bIndex + 1, bIndex + 4);
+            var r = rgb.substring(rIndex + 1, rIndex + 4);
+            var g = rgb.substring(gIndex + 1, gIndex + 4);
+            var b = rgb.substring(bIndex + 1, bIndex + 4);
 
             try {
                 this.color = new Color(parseInt(r), parseInt(g), parseInt(b));
+            } catch (e) {
+                console.error(e);
+            }
+
+            try {
+                this.width = parseFloat(rgbString.substring(13).replace(',', '.'));
             } catch (e) {
                 console.error(e);
             }
@@ -198,7 +215,6 @@ class GraphicElement {
     initHeight(height) {
         if (height) {
             var toBeParsed = height.substring("HEIGHT;".length).replace(',', '.');
-            console.log(toBeParsed);
 
             this.height = parseFloat(toBeParsed);
         }
