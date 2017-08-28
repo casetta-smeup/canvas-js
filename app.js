@@ -1,16 +1,3 @@
-class Color {
-
-  constructor(r, g, b) {
-    this.r = r;
-    this.g = g;
-    this.b = b;
-  }
-
-  toString() {
-    return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
-  }
-}
-
 const GRAPHIC_ELEMENT_MARKER_SPLITTER = "\\";
 const GRAPHIC_ELEMENT_SPLITTER = "\\AND\\"
 const DEFAULT_BGD_COLOR = "BCOLOR;R255G000B000";
@@ -24,20 +11,17 @@ function onload() {
   new GraphicCell('canvas04', 'SHAPE;TRIR\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
   new GraphicCell('canvas05', 'SHAPE;TRIL\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
   new GraphicCell('canvas06', 'SHAPE;TRIR;50\\BCOLOR;R102G255B178\\*NONE;33,3\\R255G255B051;66,5').draw();
+  new GraphicCell('canvas07', 'SHAPE;TRIR\\R000G255B128;33,3\\AND\\SHAPE;TRIL\\*NONE;33,3\\R255G255B051;66,6\\AND\\SHAPE;CIRCLE\\R000G000B255;66,6').draw();
 }
 
-class GraphicElement {
+function GraphicElement() {
 
-  constructor(markers) {
-    this.width = 100.0;
-    this.height = 100.0;
-    this.color = null;
-    this.shape = 'bar';
+  this.width = 100.0;
+  this.height = 100.0;
+  this.color = null;
+  this.shape = 'bar';
 
-    this.init(markers);
-  }
-
-  init(markers) {
+  this.init = function(markers) {
     for (var i = 0; i < markers.length; i++) {
       var marker = markers[i];
 
@@ -53,7 +37,7 @@ class GraphicElement {
     }
   }
 
-  initColor(rgbString) {
+  this.initColor = function(rgbString) {
     if (rgbString.length > 11 && this.isValidColor(rgbString)) {
       this.color = getColorFromString(rgbString.substring(0, 12));
 
@@ -71,11 +55,11 @@ class GraphicElement {
     }
   }
 
-  isTrasparent() {
+  this.isTrasparent = function() {
     return this.color == null;
   }
 
-  initHeight(height) {
+  this.initHeight = function(height) {
     if (height) {
       var toBeParsed = height.substring("HEIGHT;".length).replace(',', '.');
 
@@ -83,7 +67,7 @@ class GraphicElement {
     }
   }
 
-  initShape(shape) {
+  this.initShape = function(shape) {
     shape = shape.substring("SHAPE;".length);
     var vLastSemicolonIndex = shape.indexOf(";");
     var vShapeTypeString = shape;
@@ -112,7 +96,7 @@ class GraphicElement {
     }
   }
 
-  isValidColor(color) {
+  this.isValidColor = function(color) {
     if (!color) {
       return false;
     }
@@ -196,19 +180,19 @@ class GraphicElement {
     return true;
   }
 
-  getHeight() {
+  this.getHeight = function() {
     return this.height;
   }
 
-  getWidth() {
+  this.getWidth = function() {
     return this.width;
   }
 
-  getShape() {
+  this.getShape = function() {
     return this.shape;
   }
 
-  getColor() {
+  this.getColor = function() {
     return this.color;
   }
 }
@@ -238,14 +222,12 @@ function getColorFromString(rgb) {
   return null;
 }
 
-class GraphicCell {
+function GraphicCell(canvasID, value) {
 
-  constructor(canvasID, value) {
-    this.canvasID = canvasID;
-    this.value = value;
-  }
+  this.canvasID = canvasID;
+  this.value = value;
 
-  draw() {
+  this.draw = function() {
     var canvas = document.getElementById(this.canvasID);
     this.canvas = canvas;
 
@@ -256,7 +238,7 @@ class GraphicCell {
     }
   }
 
-  drawGraphicCell() {
+  this.drawGraphicCell = function() {
     var vGraphicElementDefinitionArr = this.value.split(GRAPHIC_ELEMENT_SPLITTER);
 
     for (var i = 0; i < vGraphicElementDefinitionArr.length; i++) {
@@ -290,7 +272,8 @@ class GraphicCell {
       }
 
       shapesArray.forEach(shape => {
-        var elem = new GraphicElement([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
+        var elem = new GraphicElement();
+        elem.init([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
         vGraphicElementArray.push(elem);
       })
 
@@ -335,8 +318,7 @@ class GraphicCell {
     });
   }
 
-  drawSeparator(sep) {
-
+  this.drawSeparator = function(sep) {
     var vSeparatorPart = sep.substring("SEP;".length).split(";");
     var vColor = "R000G000B000";
     var vThickness = 2;
@@ -358,7 +340,7 @@ class GraphicCell {
     this.drawRect(x, 0, vThickness, this.canvas.height, getColorFromString(vColor));
   }
 
-  drawGrid(sep) {
+  this.drawGrid = function(sep) {
     var vPart = sep.substring("GRID;".length);
     if (vPart.indexOf(",") > -1) {
       vPart = vPart.replace(',', '.');
@@ -375,7 +357,7 @@ class GraphicCell {
     }
   }
 
-  drawArrow(sep) {
+  this.drawArrow = function(sep) {
     var vPart = sep.substring("ARW;".length);
     if (vPart.indexOf(',') > -1) {
       vPart = vPart.replace(',', '.');
@@ -399,28 +381,28 @@ class GraphicCell {
     this.ctx.fill();
   }
 
-  isShapeMarker(value) {
+  this.isShapeMarker = function(value) {
     if (value) {
       return value.toUpperCase().startsWith("SHAPE;")
     }
     return false;
   }
 
-  isBgColorMarker(value) {
+  this.isBgColorMarker = function(value) {
     if (value) {
       return value.toUpperCase().startsWith("BCOLOR;")
     }
     return false;
   }
 
-  isHeightMarker(value) {
+  this.isHeightMarker = function(value) {
     if (value) {
       return value.toUpperCase().startsWith("HEIGHT;")
     }
     return false;
   }
 
-  isDecoratorMarker(value) {
+  this.isDecoratorMarker = function(value) {
     if (value) {
       return value.toUpperCase().startsWith("SEP;")
         || value.toUpperCase().startsWith("DIV;")
@@ -430,11 +412,11 @@ class GraphicCell {
     return false;
   }
 
-  getDim(dimPixel, dimPerc) {
+  this.getDim = function(dimPixel, dimPerc) {
     return parseInt((dimPixel / 100) * dimPerc);
   }
 
-  getNewStarXFromBar(startX, elem) {
+  this.getNewStarXFromBar = function(startX, elem) {
     var elemWidth = this.getDim(this.canvas.width, elem.getWidth());
     var elemHeight = this.getDim(this.canvas.height, elem.getHeight());
     var y = this.canvas.height - elemHeight;
@@ -446,7 +428,7 @@ class GraphicCell {
     return elemWidth;
   }
 
-  getNewStarXFromCircle(startX, circle) {
+  this.getNewStarXFromCircle = function(startX, circle) {
     var newStartX = this.getDim(this.canvas.width, circle.getWidth());
 
     var x = (startX + newStartX) / 2;
@@ -458,7 +440,7 @@ class GraphicCell {
     return newStartX;
   }
 
-  getNewStarXFromTril(startX, tril) {
+  this.getNewStarXFromTril = function(startX, tril) {
     var newStartX = this.getDim(this.canvas.width, tril.getWidth());
 
     if (!tril.isTrasparent()) {
@@ -468,7 +450,7 @@ class GraphicCell {
     return newStartX;
   }
 
-  getNewStarXFromTrir(startX, trir) {
+  this.getNewStarXFromTrir = function(startX, trir) {
     var newStartX = this.getDim(this.canvas.width, trir.getWidth());
 
     if (!trir.isTrasparent()) {
@@ -478,24 +460,34 @@ class GraphicCell {
     return newStartX;
   }
 
-  drawArc(x, radius, c) {
-    this.ctx.beginPath();
+  this.drawArc = function(x, radius, c) {
     this.ctx.fillStyle = c.toString();
+    this.ctx.beginPath();
     this.ctx.arc(x, radius, radius, 0, 2 * Math.PI, true);
     this.ctx.fill();
   }
 
-  drawRect(x, y, width, height, c) {
+  this.drawRect = function(x, y, width, height, c) {
     this.ctx.fillStyle = c.toString();
     this.ctx.fillRect(x, y, width, height);
   }
 
-  drawTri(x1, y1, x2, y2, c) {
+  this.drawTri = function(x1, y1, x2, y2, c) {
     this.ctx.fillStyle = c.toString();
     this.ctx.beginPath();
     this.ctx.moveTo(x1, y1);
     this.ctx.lineTo(x2, y2);
     this.ctx.lineTo(x1, this.canvas.height);
     this.ctx.fill();
+  }
+}
+
+function Color(r, g, b) {
+  this.r = r;
+  this.g = g;
+  this.b = b;
+
+  this.toString = function () {
+    return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
   }
 }
