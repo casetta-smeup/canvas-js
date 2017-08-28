@@ -21,6 +21,8 @@ function onload() {
     new GraphicCell('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20').draw();
     new GraphicCell('canvas02', 'R000G255B128;33,3\\ARW;50,00\\R255G255B051;66,5\\R220G000B000;100,0\\GRID;3').draw();
     new GraphicCell('canvas03', 'SHAPE;CIRCLE\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
+    new GraphicCell('canvas04', 'SHAPE;TRIR\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
+    new GraphicCell('canvas05', 'SHAPE;TRIL\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
 }
 
 class GraphicElement {
@@ -226,9 +228,11 @@ class GraphicCell {
                         break;
 
                     case 'tril':
+                        startX = this.getNewStarXFromTril(startX, elem);
                         break;
 
                     case 'trir':
+                        startX = this.getNewStarXFromTrir(startX, elem);
                         break;
 
                     default:
@@ -373,15 +377,44 @@ class GraphicCell {
         return newStartX;
     }
 
-    drawRect(x, y, width, height, c) {
-        this.ctx.fillStyle = c.toString();
-        this.ctx.fillRect(x, y, width, height);
+    getNewStarXFromTril(startX, tril) {
+        var newStartX = this.getDim(this.canvas.width, tril.getWidth());
+
+        if (!tril.isTrasparent()) {
+            this.drawTri(newStartX, 0, startX, this.canvas.height / 2, tril.getColor());
+        }
+
+        return newStartX;
+    }
+
+    getNewStarXFromTrir(startX, trir) {
+        var newStartX = this.getDim(this.canvas.width, trir.getWidth());
+
+        if (!trir.isTrasparent()) {
+            this.drawTri(startX, 0, newStartX, this.canvas.height / 2, trir.getColor());
+        }
+
+        return newStartX;
     }
 
     drawArc(x, radius, c) {
         this.ctx.beginPath();
         this.ctx.fillStyle = c.toString();
         this.ctx.arc(x, radius, radius, 0, 2 * Math.PI, true);
+        this.ctx.fill();
+    }
+
+    drawRect(x, y, width, height, c) {
+        this.ctx.fillStyle = c.toString();
+        this.ctx.fillRect(x, y, width, height);
+    }
+
+    drawTri(x1, y1, x2, y2, c) {
+        this.ctx.fillStyle = c.toString();
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.lineTo(x1, this.canvas.height);
         this.ctx.fill();
     }
 }
