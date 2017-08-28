@@ -1,14 +1,14 @@
 class Color {
 
-    constructor(r, g, b) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-    }
+  constructor(r, g, b) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+  }
 
-    toString() {
-        return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
-    }
+  toString() {
+    return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
+  }
 }
 
 const GRAPHIC_ELEMENT_MARKER_SPLITTER = "\\";
@@ -17,404 +17,406 @@ const DEFAULT_BGD_COLOR = "BCOLOR;R255G000B000";
 const DEFAULT_COLOR = new Color(0, 0, 0);
 
 function onload() {
-    new GraphicCell('canvas00', 'R255G128B000;20,58\\HEIGHT;60').draw();
-    new GraphicCell('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20').draw();
-    new GraphicCell('canvas02', 'R000G255B128;33,3\\ARW;50,00\\R255G255B051;66,5\\R220G000B000;100,0\\GRID;3').draw();
-    new GraphicCell('canvas03', 'SHAPE;CIRCLE\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
-    new GraphicCell('canvas04', 'SHAPE;TRIR\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
-    new GraphicCell('canvas05', 'SHAPE;TRIL\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
+  new GraphicCell('canvas00', 'R255G128B000;20,58\\HEIGHT;60').draw();
+  new GraphicCell('canvas01', 'R255G000B000;12,4\\SEP;25,00;R000G000B255;5\\R255G255B000;74,00\\GRID;20').draw();
+  new GraphicCell('canvas02', 'R000G255B128;33,3\\ARW;50,00\\R255G255B051;66,5\\R220G000B000;100,0\\GRID;3').draw();
+  new GraphicCell('canvas03', 'SHAPE;CIRCLE\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
+  new GraphicCell('canvas04', 'SHAPE;TRIR\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
+  new GraphicCell('canvas05', 'SHAPE;TRIL\\R000G255B128;33,3\\R255G255B051;66,5\\R220G000B000;100,0').draw();
+  new GraphicCell('canvas06', 'SHAPE;TRIR;50\\BCOLOR;R102G255B178\\*NONE;33,3\\R255G255B051;66,5').draw();
 }
 
 class GraphicElement {
 
-    constructor(markers) {
-        this.width = 100.0;
-        this.height = 100.0;
-        this.color = null;
-        this.shape = 'bar';
+  constructor(markers) {
+    this.width = 100.0;
+    this.height = 100.0;
+    this.color = null;
+    this.shape = 'bar';
 
-        this.init(markers);
+    this.init(markers);
+  }
+
+  init(markers) {
+    for (var i = 0; i < markers.length; i++) {
+      var marker = markers[i];
+
+      if (marker.toUpperCase().startsWith('HEIGHT;')) {
+        this.initHeight(marker);
+      } else if (marker.toUpperCase().startsWith('SHAPE;')) {
+        this.initShape(marker);
+      } else if (marker.toUpperCase().startsWith('BCOLOR;')) {
+        // TODO ?
+      } else {
+        this.initColor(marker);
+      }
+    }
+  }
+
+  initColor(rgbString) {
+    if (rgbString.length > 11 && this.isValidColor(rgbString)) {
+      this.color = getColorFromString(rgbString.substring(0, 12));
+
+      try {
+        this.width = parseFloat(rgbString.substring(13).replace(',', '.'));
+      } catch (e) {
+        console.error(e);
+      }
+    } else if (rgbString.startsWith('*NONE')) {
+      try {
+        this.width = parseFloat(rgbString.substring(6).replace(',', '.'));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+
+  isTrasparent() {
+    return this.color == null;
+  }
+
+  initHeight(height) {
+    if (height) {
+      var toBeParsed = height.substring("HEIGHT;".length).replace(',', '.');
+
+      this.height = parseFloat(toBeParsed);
+    }
+  }
+
+  initShape(shape) {
+    shape = shape.substring("SHAPE;".length);
+    var vLastSemicolonIndex = shape.indexOf(";");
+    var vShapeTypeString = shape;
+    if (vLastSemicolonIndex > -1) {
+      vShapeTypeString = shape.substring(0, vLastSemicolonIndex);
+
+      try {
+        // this.width = parseFloat(shape.substring(vLastSemicolonIndex + 1).replace(',', '.');
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    init(markers) {
-        for (var i = 0; i < markers.length; i++) {
-            var marker = markers[i];
+    switch (vShapeTypeString.toLowerCase()) {
+      case "circle":
+        this.shape = "circle";
+        break;
 
-            if (marker.toUpperCase().startsWith('HEIGHT;')) {
-                this.initHeight(marker);
-            } else if (marker.toUpperCase().startsWith('SHAPE;')) {
-                this.initShape(marker);
-            } else if (marker.toUpperCase().startsWith('BCOLOR;')) {
-                // TODO ?
-            } else {
-                this.initColor(marker);
-            }
-        }
+      case "tril":
+        this.shape = "tril";
+        break;
+
+      case "trir":
+        this.shape = "trir";
+        break;
     }
+  }
 
-    initColor(rgbString) {
-        if (rgbString.length > 11 && this.isValidColor(rgbString)) {
-            this.color = getColorFromString(rgbString.substring(0, 12));
+  isValidColor(color) {
+    // TODO
+    return true;
+  }
 
-            try {
-                this.width = parseFloat(rgbString.substring(13).replace(',', '.'));
-            } catch (e) {
-                console.error(e);
-            }
-        } else if (rgbString.toUpperCase() == '*NONE') {
-            try {
-                this.width = parseFloat(rgbString.substring(6).replace(',', '.'));
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    }
+  getHeight() {
+    return this.height;
+  }
 
-    isTrasparent() {
-        return this.color == null;
-    }
+  getWidth() {
+    return this.width;
+  }
 
-    initHeight(height) {
-        if (height) {
-            var toBeParsed = height.substring("HEIGHT;".length).replace(',', '.');
+  getShape() {
+    return this.shape;
+  }
 
-            this.height = parseFloat(toBeParsed);
-        }
-    }
-
-    initShape(shape) {
-        shape = shape.substring("SHAPE;".length);
-        var vLastSemicolonIndex = shape.indexOf(";");
-        var vShapeTypeString = shape;
-        if (vLastSemicolonIndex > -1) {
-            vShapeTypeString = shape.substring(0, vLastSemicolonIndex);
-
-            try {
-                // this.width = parseFloat(shape.substring(vLastSemicolonIndex + 1).replace(',', '.');
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        switch (vShapeTypeString.toLowerCase()) {
-            case "circle":
-                this.shape = "circle";
-                break;
-
-            case "tril":
-                this.shape = "tril";
-                break;
-
-            case "trir":
-                this.shape = "trir";
-                break;
-        }
-    }
-
-    isValidColor(color) {
-        // TODO
-        return true;
-    }
-
-    getHeight() {
-        return this.height;
-    }
-
-    getWidth() {
-        return this.width;
-    }
-
-    getShape() {
-        return this.shape;
-    }
-
-    getColor() {
-        return this.color;
-    }
+  getColor() {
+    return this.color;
+  }
 }
 
 function getColorFromString(rgb) {
-    var rIndex = rgb.indexOf('R');
-    var gIndex = rgb.indexOf('G');
-    var bIndex = rgb.indexOf('B');
+  var rIndex = rgb.indexOf('R');
+  var gIndex = rgb.indexOf('G');
+  var bIndex = rgb.indexOf('B');
 
-    if (rIndex < 0
-        || gIndex < 0
-        || bIndex < 0) {
+  if (rIndex < 0
+    || gIndex < 0
+    || bIndex < 0) {
 
-        return;
-    }
+    return;
+  }
 
-    var r = rgb.substring(rIndex + 1, rIndex + 4);
-    var g = rgb.substring(gIndex + 1, gIndex + 4);
-    var b = rgb.substring(bIndex + 1, bIndex + 4);
+  var r = rgb.substring(rIndex + 1, rIndex + 4);
+  var g = rgb.substring(gIndex + 1, gIndex + 4);
+  var b = rgb.substring(bIndex + 1, bIndex + 4);
 
-    try {
-        return new Color(parseInt(r), parseInt(g), parseInt(b));
-    } catch (e) {
-        console.error(e);
-    }
+  try {
+    return new Color(parseInt(r), parseInt(g), parseInt(b));
+  } catch (e) {
+    console.error(e);
+  }
 
-    return null;
+  return null;
 }
 
 class GraphicCell {
 
-    constructor(canvasID, value) {
-        this.canvasID = canvasID;
-        this.value = value;
+  constructor(canvasID, value) {
+    this.canvasID = canvasID;
+    this.value = value;
+  }
+
+  draw() {
+    var canvas = document.getElementById(this.canvasID);
+    this.canvas = canvas;
+
+    if (canvas.getContext) {
+      this.ctx = canvas.getContext('2d');
+
+      this.drawGraphicCell();
     }
+  }
 
-    draw() {
-        var canvas = document.getElementById(this.canvasID);
-        this.canvas = canvas;
+  drawGraphicCell() {
+    var vGraphicElementDefinitionArr = this.value.split(GRAPHIC_ELEMENT_SPLITTER);
 
-        if (canvas.getContext) {
-            this.ctx = canvas.getContext('2d');
+    for (var i = 0; i < vGraphicElementDefinitionArr.length; i++) {
+      var vGraphicElementArray = [];
 
-            this.drawGraphicCell();
+      var graphicElem = vGraphicElementDefinitionArr[i];
+
+      var vShapeMarker = "SHAPE;BAR";
+      var vBGColorMarker = DEFAULT_BGD_COLOR;
+      var vHeightPctMarker = "HEIGHT;100";
+
+      var vMarkersArray = graphicElem.split(GRAPHIC_ELEMENT_MARKER_SPLITTER);
+
+      var shapesArray = [];
+      var vSeparatorsList = [];
+
+      for (var j = 0; j < vMarkersArray.length; j++) {
+        var vString = vMarkersArray[j];
+
+        if (this.isShapeMarker(vString)) {
+          vShapeMarker = vString;
+        } else if (this.isBgColorMarker(vString)) {
+          vBGColorMarker = vString;
+        } else if (this.isHeightMarker(vString)) {
+          vHeightPctMarker = vString;
+        } else if (this.isDecoratorMarker(vString)) {
+          vSeparatorsList.push(vString);
+        } else {
+          shapesArray.push(vString);
         }
-    }
+      }
 
-    drawGraphicCell() {
-        var vGraphicElementDefinitionArr = this.value.split(GRAPHIC_ELEMENT_SPLITTER);
+      shapesArray.forEach(shape => {
+        var elem = new GraphicElement([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
+        vGraphicElementArray.push(elem);
+      })
 
-        for (var i = 0; i < vGraphicElementDefinitionArr.length; i++) {
-            var vGraphicElementArray = [];
+      // se e' il primo giro, imposto lo sfondo
+      if (i == 0 && vBGColorMarker != DEFAULT_BGD_COLOR) {
+        var bgColor = getColorFromString(vBGColorMarker.substring('BCOLOR;'.length));
+        this.drawRect(0, 0, this.canvas.width, this.canvas.height, bgColor); 
+      }
 
-            var graphicElem = vGraphicElementDefinitionArr[i];
+      var startX = 0;
 
-            var vShapeMarker = "SHAPE;BAR";
-            var vBGColorMarker = DEFAULT_BGD_COLOR;
-            var vHeightPctMarker = "HEIGHT;100";
+      vGraphicElementArray.forEach(elem => {
+        switch (elem.getShape()) {
+          case 'circle':
+            startX = this.getNewStarXFromCircle(startX, elem);
+            break;
 
-            var vMarkersArray = graphicElem.split(GRAPHIC_ELEMENT_MARKER_SPLITTER);
+          case 'tril':
+            startX = this.getNewStarXFromTril(startX, elem);
+            break;
 
-            var shapesArray = [];
-            var vSeparatorsList = [];
+          case 'trir':
+            startX = this.getNewStarXFromTrir(startX, elem);
+            break;
 
-            for (var j = 0; j < vMarkersArray.length; j++) {
-                var vString = vMarkersArray[j];
-
-                if (this.isShapeMarker(vString)) {
-                    vShapeMarker = vString;
-                } else if (this.isBgColorMarker(vString)) {
-                    vBGColorMarker = vString;
-                } else if (this.isHeightMarker(vString)) {
-                    vHeightPctMarker = vString;
-                } else if (this.isDecoratorMarker(vString)) {
-                    vSeparatorsList.push(vString);
-                } else {
-                    shapesArray.push(vString);
-                }
-            }
-
-            shapesArray.forEach(shape => {
-                var elem = new GraphicElement([vShapeMarker, vBGColorMarker, vHeightPctMarker, shape]);
-                vGraphicElementArray.push(elem);
-            })
-
-            // se e' il primo giro, imposto lo sfondo
-            if (i == 0 && vBGColorMarker != DEFAULT_BGD_COLOR) {
-                // TODO
-            }
-
-            var startX = 0;
-
-            vGraphicElementArray.forEach(elem => {
-                switch (elem.getShape()) {
-                    case 'circle':
-                        startX = this.getNewStarXFromCircle(startX, elem);
-                        break;
-
-                    case 'tril':
-                        startX = this.getNewStarXFromTril(startX, elem);
-                        break;
-
-                    case 'trir':
-                        startX = this.getNewStarXFromTrir(startX, elem);
-                        break;
-
-                    default:
-                        // bar
-                        startX = this.getNewStarXFromBar(startX, elem);
-                        break;
-                }
-            })
+          default:
+            // bar
+            startX = this.getNewStarXFromBar(startX, elem);
+            break;
         }
-
-        vSeparatorsList.forEach(sep => {
-            if (sep.startsWith("SEP") || sep.startsWith("DIV")) {
-                this.drawSeparator(sep);
-            } else if (sep.startsWith("ARW")) {
-                this.drawArrow(sep);
-            } else if (sep.startsWith("GRID")) {
-                this.drawGrid(sep);
-            }
-        });
+      })
     }
 
-    drawSeparator(sep) {
+    vSeparatorsList.forEach(sep => {
+      if (sep.startsWith("SEP") || sep.startsWith("DIV")) {
+        this.drawSeparator(sep);
+      } else if (sep.startsWith("ARW")) {
+        this.drawArrow(sep);
+      } else if (sep.startsWith("GRID")) {
+        this.drawGrid(sep);
+      }
+    });
+  }
 
-        var vSeparatorPart = sep.substring("SEP;".length).split(";");
-        var vColor = "R000G000B000";
-        var vThickness = 2;
-        var vPositionPart = vSeparatorPart[0];
-        if (vSeparatorPart.length > 1) {
-            vColor = vSeparatorPart[1];
-        }
-        if (vSeparatorPart.length > 2) {
-            vThickness = parseInt(vSeparatorPart[2]);
-        }
+  drawSeparator(sep) {
 
-        // I dont know, but it's a fucking copia incolla
-        if (vPositionPart.indexOf(",") > -1) {
-            vPositionPart = vPositionPart.replace(',', '.');
-        }
-
-        var x = this.getDim(this.canvas.width, parseFloat(vPositionPart));
-
-        this.drawRect(x, 0, vThickness, this.canvas.height, getColorFromString(vColor));
+    var vSeparatorPart = sep.substring("SEP;".length).split(";");
+    var vColor = "R000G000B000";
+    var vThickness = 2;
+    var vPositionPart = vSeparatorPart[0];
+    if (vSeparatorPart.length > 1) {
+      vColor = vSeparatorPart[1];
+    }
+    if (vSeparatorPart.length > 2) {
+      vThickness = parseInt(vSeparatorPart[2]);
     }
 
-    drawGrid(sep) {
-        var vPart = sep.substring("GRID;".length);
-        if (vPart.indexOf(",") > -1) {
-            vPart = vPart.replace(',', '.');
-        }
-        var vTickNum = parseInt(vPart);
-        var vTickDist = this.canvas.width / vTickNum;
-
-        var tickH = this.canvas.height / 5;
-        var y = this.canvas.height - tickH;
-
-        var tickW = 1;
-        for (var i = vTickDist; i < this.canvas.width; i = i + vTickDist) {
-            this.drawRect(i, y, tickW, tickH, DEFAULT_COLOR);
-        }
+    // I dont know, but it's a fucking copia incolla
+    if (vPositionPart.indexOf(",") > -1) {
+      vPositionPart = vPositionPart.replace(',', '.');
     }
 
-    drawArrow(sep) {
-        var vPart = sep.substring("ARW;".length);
-        if (vPart.indexOf(',') > -1) {
-            vPart = vPart.replace(',', '.');
-        }
+    var x = this.getDim(this.canvas.width, parseFloat(vPositionPart));
 
-        this.ctx.fillStyle = DEFAULT_COLOR.toString();
+    this.drawRect(x, 0, vThickness, this.canvas.height, getColorFromString(vColor));
+  }
 
-        var startX = this.getDim(this.canvas.width, parseFloat(vPart));
-        var height = this.canvas.height;
-        var arrSpan = parseInt(height / 3);
-        var arrSpanHalf = arrSpan / 2;
+  drawGrid(sep) {
+    var vPart = sep.substring("GRID;".length);
+    if (vPart.indexOf(",") > -1) {
+      vPart = vPart.replace(',', '.');
+    }
+    var vTickNum = parseInt(vPart);
+    var vTickDist = this.canvas.width / vTickNum;
 
-        this.ctx.beginPath();
-        this.ctx.moveTo(startX, 0);
-        this.ctx.lineTo(startX - arrSpan, height / 2);
-        this.ctx.lineTo(startX - arrSpanHalf, height / 2);
-        this.ctx.lineTo(startX - arrSpanHalf, height);
-        this.ctx.lineTo(startX + arrSpanHalf, height);
-        this.ctx.lineTo(startX + arrSpanHalf, height / 2);
-        this.ctx.lineTo(startX + arrSpan, height / 2);
-        this.ctx.fill();
+    var tickH = this.canvas.height / 5;
+    var y = this.canvas.height - tickH;
+
+    var tickW = 1;
+    for (var i = vTickDist; i < this.canvas.width; i = i + vTickDist) {
+      this.drawRect(i, y, tickW, tickH, DEFAULT_COLOR);
+    }
+  }
+
+  drawArrow(sep) {
+    var vPart = sep.substring("ARW;".length);
+    if (vPart.indexOf(',') > -1) {
+      vPart = vPart.replace(',', '.');
     }
 
-    isShapeMarker(value) {
-        if (value) {
-            return value.toUpperCase().startsWith("SHAPE;")
-        }
-        return false;
+    this.ctx.fillStyle = DEFAULT_COLOR.toString();
+
+    var startX = this.getDim(this.canvas.width, parseFloat(vPart));
+    var height = this.canvas.height;
+    var arrSpan = parseInt(height / 3);
+    var arrSpanHalf = arrSpan / 2;
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(startX, 0);
+    this.ctx.lineTo(startX - arrSpan, height / 2);
+    this.ctx.lineTo(startX - arrSpanHalf, height / 2);
+    this.ctx.lineTo(startX - arrSpanHalf, height);
+    this.ctx.lineTo(startX + arrSpanHalf, height);
+    this.ctx.lineTo(startX + arrSpanHalf, height / 2);
+    this.ctx.lineTo(startX + arrSpan, height / 2);
+    this.ctx.fill();
+  }
+
+  isShapeMarker(value) {
+    if (value) {
+      return value.toUpperCase().startsWith("SHAPE;")
+    }
+    return false;
+  }
+
+  isBgColorMarker(value) {
+    if (value) {
+      return value.toUpperCase().startsWith("BCOLOR;")
+    }
+    return false;
+  }
+
+  isHeightMarker(value) {
+    if (value) {
+      return value.toUpperCase().startsWith("HEIGHT;")
+    }
+    return false;
+  }
+
+  isDecoratorMarker(value) {
+    if (value) {
+      return value.toUpperCase().startsWith("SEP;")
+        || value.toUpperCase().startsWith("DIV;")
+        || value.toUpperCase().startsWith("ARW;")
+        || value.toUpperCase().startsWith("GRID;");
+    }
+    return false;
+  }
+
+  getDim(dimPixel, dimPerc) {
+    return parseInt((dimPixel / 100) * dimPerc);
+  }
+
+  getNewStarXFromBar(startX, elem) {
+    var elemWidth = this.getDim(this.canvas.width, elem.getWidth());
+    var elemHeight = this.getDim(this.canvas.height, elem.getHeight());
+    var y = this.canvas.height - elemHeight;
+
+    if (!elem.isTrasparent()) {
+      this.drawRect(startX, y, elemWidth, elemHeight, elem.getColor());
     }
 
-    isBgColorMarker(value) {
-        if (value) {
-            return value.toUpperCase().startsWith("BCOLOR;")
-        }
-        return false;
+    return elemWidth;
+  }
+
+  getNewStarXFromCircle(startX, circle) {
+    var newStartX = this.getDim(this.canvas.width, circle.getWidth());
+
+    var x = (startX + newStartX) / 2;
+
+    if (!circle.isTrasparent()) {
+      this.drawArc(x, this.canvas.height / 2, circle.getColor());
     }
 
-    isHeightMarker(value) {
-        if (value) {
-            return value.toUpperCase().startsWith("HEIGHT;")
-        }
-        return false;
+    return newStartX;
+  }
+
+  getNewStarXFromTril(startX, tril) {
+    var newStartX = this.getDim(this.canvas.width, tril.getWidth());
+
+    if (!tril.isTrasparent()) {
+      this.drawTri(newStartX, 0, startX, this.canvas.height / 2, tril.getColor());
     }
 
-    isDecoratorMarker(value) {
-        if (value) {
-            return value.toUpperCase().startsWith("SEP;")
-                || value.toUpperCase().startsWith("DIV;")
-                || value.toUpperCase().startsWith("ARW;")
-                || value.toUpperCase().startsWith("GRID;");
-        }
-        return false;
+    return newStartX;
+  }
+
+  getNewStarXFromTrir(startX, trir) {
+    var newStartX = this.getDim(this.canvas.width, trir.getWidth());
+
+    if (!trir.isTrasparent()) {
+      this.drawTri(startX, 0, newStartX, this.canvas.height / 2, trir.getColor());
     }
 
-    getDim(dimPixel, dimPerc) {
-        return parseInt((dimPixel / 100) * dimPerc);
-    }
+    return newStartX;
+  }
 
-    getNewStarXFromBar(startX, elem) {
-        var elemWidth = this.getDim(this.canvas.width, elem.getWidth());
-        var elemHeight = this.getDim(this.canvas.height, elem.getHeight());
-        var y = this.canvas.height - elemHeight;
+  drawArc(x, radius, c) {
+    this.ctx.beginPath();
+    this.ctx.fillStyle = c.toString();
+    this.ctx.arc(x, radius, radius, 0, 2 * Math.PI, true);
+    this.ctx.fill();
+  }
 
-        if (!elem.isTrasparent()) {
-            this.drawRect(startX, y, elemWidth, elemHeight, elem.getColor());
-        }
+  drawRect(x, y, width, height, c) {
+    this.ctx.fillStyle = c.toString();
+    this.ctx.fillRect(x, y, width, height);
+  }
 
-        return elemWidth;
-    }
-
-    getNewStarXFromCircle(startX, circle) {
-        var newStartX = this.getDim(this.canvas.width, circle.getWidth());
-
-        var x = (startX + newStartX) / 2;
-
-        if (!circle.isTrasparent()) {
-            this.drawArc(x, this.canvas.height / 2, circle.getColor());
-        }
-
-        return newStartX;
-    }
-
-    getNewStarXFromTril(startX, tril) {
-        var newStartX = this.getDim(this.canvas.width, tril.getWidth());
-
-        if (!tril.isTrasparent()) {
-            this.drawTri(newStartX, 0, startX, this.canvas.height / 2, tril.getColor());
-        }
-
-        return newStartX;
-    }
-
-    getNewStarXFromTrir(startX, trir) {
-        var newStartX = this.getDim(this.canvas.width, trir.getWidth());
-
-        if (!trir.isTrasparent()) {
-            this.drawTri(startX, 0, newStartX, this.canvas.height / 2, trir.getColor());
-        }
-
-        return newStartX;
-    }
-
-    drawArc(x, radius, c) {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = c.toString();
-        this.ctx.arc(x, radius, radius, 0, 2 * Math.PI, true);
-        this.ctx.fill();
-    }
-
-    drawRect(x, y, width, height, c) {
-        this.ctx.fillStyle = c.toString();
-        this.ctx.fillRect(x, y, width, height);
-    }
-
-    drawTri(x1, y1, x2, y2, c) {
-        this.ctx.fillStyle = c.toString();
-        this.ctx.beginPath();
-        this.ctx.moveTo(x1, y1);
-        this.ctx.lineTo(x2, y2);
-        this.ctx.lineTo(x1, this.canvas.height);
-        this.ctx.fill();
-    }
+  drawTri(x1, y1, x2, y2, c) {
+    this.ctx.fillStyle = c.toString();
+    this.ctx.beginPath();
+    this.ctx.moveTo(x1, y1);
+    this.ctx.lineTo(x2, y2);
+    this.ctx.lineTo(x1, this.canvas.height);
+    this.ctx.fill();
+  }
 }
