@@ -91,7 +91,7 @@ class GraphicElement {
       vShapeTypeString = shape.substring(0, vLastSemicolonIndex);
 
       try {
-        // this.width = parseFloat(shape.substring(vLastSemicolonIndex + 1).replace(',', '.');
+        this.width = parseFloat(shape.substring(vLastSemicolonIndex + 1).replace(',', '.'));
       } catch (err) {
         console.error(err);
       }
@@ -113,7 +113,86 @@ class GraphicElement {
   }
 
   isValidColor(color) {
-    // TODO
+    if (!color) {
+      return false;
+    }
+
+    color = color.trim();
+
+    var vRgb = [];
+
+    var vError = false;
+
+    var vColorKey = null;
+
+    // red
+    var vIndex = color.indexOf('R');
+    if (vIndex > -1) {
+      vColorKey = color.substring(vIndex + 1, vIndex + 4);
+      vRgb[0] = parseInt(vColorKey);
+      if (isNaN(vRgb[0])) {
+        vError = true;
+      }
+    }
+
+    // green
+    var vIndex = color.indexOf('G');
+    if (vIndex > -1) {
+      vColorKey = color.substring(vIndex + 1, vIndex + 4);
+      vRgb[1] = parseInt(vColorKey);
+      if (isNaN(vRgb[1])) {
+        vError = true;
+      }
+    }
+
+    // blue
+    var vIndex = color.indexOf('B');
+    if (vIndex > -1) {
+      vColorKey = color.substring(vIndex + 1, vIndex + 4);
+      vRgb[2] = parseInt(vColorKey);
+      if (isNaN(vRgb[2])) {
+        vError = true;
+      }
+    }
+
+
+    if (vError) {
+      var vIndexR = aColorCode.indexOf('R');
+      var vIndexG = aColorCode.indexOf('G');
+      var vIndexB = aColorCode.indexOf('B');
+
+      // Ricerca componente R
+      vColorKey = aColorCode.substring(vIndexR + 1, vIndexG);
+      vRgb[0] = parseInt(vColorKey);
+      if (isNaN(vRgb[0])) {
+        vError = true;
+      }
+
+      // Ricerca componente G
+      vColorKey = aColorCode.substring(vIndexG + 1, vIndexB);
+      vRgb[1] = parseInt(vColorKey);
+      if (isNaN(vRgb[1])) {
+        vError = true;
+      }
+
+      // Ricerca componente B
+      vColorKey = aColorCode.substring(vIndexB + 1);
+      vRgb[2] = parseInt(vColorKey);
+      if (isNaN(vRgb[2])) {
+        vError = true;
+      }
+
+      if (vError) {
+        return false;
+      }
+    }
+
+    // Controllo che tutti i valori siano compresi tra 0 e 255
+    if ((vRgb[0] < 0) || (vRgb[0] > 255) || (vRgb[1] < 0) || (vRgb[1] > 255) || (vRgb[2] < 0) || (vRgb[2] > 255)) {
+      return false;
+    }
+
+    // Se arrivo qui tutto va bene
     return true;
   }
 
@@ -218,7 +297,7 @@ class GraphicCell {
       // se e' il primo giro, imposto lo sfondo
       if (i == 0 && vBGColorMarker != DEFAULT_BGD_COLOR) {
         var bgColor = getColorFromString(vBGColorMarker.substring('BCOLOR;'.length));
-        this.drawRect(0, 0, this.canvas.width, this.canvas.height, bgColor); 
+        this.drawRect(0, 0, this.canvas.width, this.canvas.height, bgColor);
       }
 
       var startX = 0;
